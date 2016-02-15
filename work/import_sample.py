@@ -174,7 +174,7 @@ if __name__ == '__main__':
                       help="File with events 'like/dislike'")
     opts, args = parser.parse_args()
     if not opts.event_server_uri:
-    parser.error("URI of event server missing")
+        parser.error("URI of event server missing")
     if not opts.access_key:
         parser.error("Access key missinng")
     if not opts.data_file:
