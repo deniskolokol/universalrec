@@ -3,14 +3,38 @@ import os
 import sys
 import json
 import random
+import zipfile
+import tempfile
 import subprocess
 import predictionio
-
+from unipath import Path
 from dateutil import parser
 from datetime import datetime
 from optparse import OptionParser
 
-TZ = predictionio.pytz.timezone("Europe/Warsaw")
+
+TZ = predictionio.pytz.timezone("Australia/Sydney")
+
+
+class TempFile(object):
+    def __init__(self, data='', **kwargs):
+        self._f = tempfile.NamedTemporaryFile(delete=False, **kwargs)
+        self._f.write(data)
+        self._f.close()
+
+    def __enter__(self):
+        return self._f.name
+
+    def __exit__(self, *args):
+        os.unlink(self._f.name)
+
+
+def get_json_data(filename):
+    with TempFile() as tf:
+        with open(tf, 'w') as tf_:
+            subprocess.call(['unzip', '-l', filename], stdout=tf_)
+        with open(tf) as f:
+            return json.load(f)
 
 
 def ensure_event_time(event_time):
@@ -84,6 +108,8 @@ class EventHandler(object):
                               '--appid', '1', #XXX: how to get app id?
                               '--input', self.filename])
             self.exporter.close()
+            print >> sys.stdout, '--\nExported to %s, waiting in queue' % \
+                     os.path.abspath(handler.filename)
 
 
 def main(filename, **kwargs):
@@ -92,51 +118,43 @@ def main(filename, **kwargs):
     clean = kwargs.get('clean', False)
     if clean:
         handler.delete_events()
-
     events = []
     props = []
     entity_type = 'image'
 
     # import static data
-    with open(kwargs['data_file'], "r+") as f:
-        for record in json.load(f):
-            entity_id = record['pk']
-            properties = record['fields']
-            del properties['likes']
-            del properties['dislikes']
-            handler.create_event(event='$set',
-                                 entity_type=entity_type,
-                                 entity_id=entity_id,
-                                 properties=properties,
-                                 **kwargs)
-            for key, val in properties.items():
-                props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
-        f.close()
+    for record in get_json_data(kwargs['data_file']):
+        entity_id = record['pk']
+        properties = record['fields']
+        del properties['likes']
+        del properties['dislikes']
+        handler.create_event(event='$set',
+                             entity_type=entity_type,
+                             entity_id=entity_id,
+                             properties=properties,
+                             **kwargs)
+        for key, val in properties.items():
+            props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
-    with open(kwargs['event_file'], "r+") as f:
-        for record in json.load(f):
-            entity_id = record['fields']['user']
-            event = 'like' if record['liked'] else 'dislike'
-            target_entity_id = record['fields'][entity_type]
-            handler.create_event(event=event,
-                                 entity_type='user',
-                                 entity_id=entity_id,
-                                 properties={},
-                                 target_entity_id=target_entity_id
-                                 target_entity_type=entity_type,
-                                 event_time=created_at,
-                                 **kwargs)
-            events.append([entity_id, event, target_entity_id])
-        f.close()
+    for record in get_json_data(kwargs['event_file']):
+        entity_id = record['fields']['user']
+        event = 'like' if record['liked'] else 'dislike'
+        target_entity_id = record['fields'][entity_type]
+        handler.create_event(event=event,
+                             entity_type='user',
+                             entity_id=entity_id,
+                             properties={},
+                             target_entity_id=target_entity_id
+                             target_entity_type=entity_type,
+                             event_time=created_at,
+                             **kwargs)
+        events.append([entity_id, event, target_entity_id])
 
     handler.close()
-    if handler.filename is not None:
-        print >> sys.stdout, '--\nExported to %s, waiting in queue' % \
-                             os.path.abspath(handler.filename)
 
     # export props and events to text file
-    f = open(filename.rsplit('.', 1)[0] + '.txt', 'w+')
+    f = open(kwargs['data_file'].rsplit('.', 1)[0] + '.txt', 'w+')
     for line in (events + props):
         f.write(','.join(line) + '\n')
     f.close()
@@ -152,11 +170,11 @@ if __name__ == '__main__':
                       help="Clean before export")
     parser.add_option("-d", "--data", action="store", dest="data_file",
                       help="Data file with image descriptions")
-    parser.add_option("-e", "--event", action="store", dest="event_file",
+    parser.add_option("-e", "--events", action="store", dest="event_file",
                       help="File with events 'like/dislike'")
     opts, args = parser.parse_args()
     if not opts.event_server_uri:
-        parser.error("URI of event server missing")
+    parser.error("URI of event server missing")
     if not opts.access_key:
         parser.error("Access key missinng")
     if not opts.data_file:
