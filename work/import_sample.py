@@ -128,7 +128,8 @@ def main(datafile, eventfile, **kwargs):
                              properties=properties,
                              **kwargs)
         for key, val in properties.items():
-            props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
+            if val is not None:
+                props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
     for record in get_json_data(eventfile):
