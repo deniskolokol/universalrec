@@ -105,7 +105,7 @@ class EventHandler(object):
     def close(self):
         if self.exporter is not None:
             subprocess.Popen(['pio', 'import',
-                              '--appid', '1', #XXX: how to get app id?
+                              '--appid', '2', #XXX: how to get app id?
                               '--input', self.filename])
             self.exporter.close()
             print >> sys.stdout, '--\nExported to %s, waiting in queue' % \
@@ -145,7 +145,7 @@ def main(filename, **kwargs):
                              entity_type='user',
                              entity_id=entity_id,
                              properties={},
-                             target_entity_id=target_entity_id
+                             target_entity_id=target_entity_id,
                              target_entity_type=entity_type,
                              event_time=created_at,
                              **kwargs)
