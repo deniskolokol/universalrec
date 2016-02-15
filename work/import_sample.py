@@ -18,14 +18,16 @@ def get_json_data(filename):
     with zipfile.ZipFile(filename, "r") as z:
         z.extractall(dirname)
         z.close()
-    json_filename = filename.rsplit('.', 1)[0]
+    json_filename = filename.replace('.zip', '.json')
     with open(json_filename, 'r') as f:
         data = json.load(f)
         f.close()
     try:
         os.remove(json_filename)
-    except:
-        pass
+    except Exception as err:
+        print >> sys.stdout, '[WARN] Cannot delete tempfile %s, the exception is %s' % \
+                             (os.path.abspath(json_filename), err)
+
     return data
 
 
