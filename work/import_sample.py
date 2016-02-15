@@ -1,13 +1,9 @@
-import re
 import os
 import sys
 import json
-import random
 import zipfile
-import tempfile
 import subprocess
 import predictionio
-from unipath import Path
 from dateutil import parser
 from datetime import datetime
 from optparse import OptionParser
@@ -16,25 +12,21 @@ from optparse import OptionParser
 TZ = predictionio.pytz.timezone("Australia/Sydney")
 
 
-class TempFile(object):
-    def __init__(self, data='', **kwargs):
-        self._f = tempfile.NamedTemporaryFile(delete=False, **kwargs)
-        self._f.write(data)
-        self._f.close()
-
-    def __enter__(self):
-        return self._f.name
-
-    def __exit__(self, *args):
-        os.unlink(self._f.name)
-
-
 def get_json_data(filename):
-    with TempFile() as tf:
-        with open(tf, 'w') as tf_:
-            subprocess.call(['unzip', '-l', filename], stdout=tf_)
-        with open(tf) as f:
-            return json.load(f)
+    #XXX: WARNING! This should be solved with tempfile!
+    dirname = os.path.dirname(filename)
+    with zipfile.ZipFile(filename, "r") as z:
+        z.extractall(dirname)
+        z.close()
+    json_filename = filename.rsplit('.', 1)[0]
+    with open(json_filename, 'r') as f:
+        data = json.load(f)
+        f.close()
+    try:
+        os.remove(json_filename)
+    except:
+        pass
+    return data
 
 
 def ensure_event_time(event_time):
