@@ -143,7 +143,7 @@ def main(datafile, eventfile, **kwargs):
                              target_entity_type=entity_type,
                              event_time=record['fields']['created_at'],
                              **kwargs)
-        events.append([entity_id, event, target_entity_id])
+        events.append([str(entity_id), event, str(target_entity_id)])
 
     handler.close()
 
