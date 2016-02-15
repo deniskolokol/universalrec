@@ -148,10 +148,15 @@ def main(datafile, eventfile, **kwargs):
     handler.close()
 
     # export props and events to text file
-    f = open(datafile.rsplit('.', 1)[0] + '.txt', 'w+')
-    for line in (events + props):
-        f.write(','.join(line) + '\n')
-    f.close()
+    text_filename = datafile.rsplit('.', 1)[0] + '.txt'
+    print '[INFO] Exporting props and events to text file.'
+    try:
+        f = open(datafile.rsplit('.', 1)[0] + '.txt', 'w+')
+        for line in (events + props):
+            f.write(','.join(line) + '\n')
+        f.close()
+    except Exception:
+        
 
 
 if __name__ == '__main__':
@@ -176,8 +181,12 @@ if __name__ == '__main__':
     if not opts.event_file:
         parser.error("File with events 'like/dislike' missinng")
 
+    datafile = os.path.abspath(opts.data_file)
+    eventfile = os.path.abspath(opts.event_file)
+    print >> sys.stdout, '[INFO] Importing properties from %s, \n\tevents from %s.' % \
+                         (datafile, eventfile)
     try:
-        main(opts.data_file, opts.event_file, **vars(opts))
-        print 'Done.'
-    except IOError as error:
-        print >> sys.stderr, error
+        main(datafile, eventfile, **vars(opts))
+        print >> sys.stdout, '[INFO] Data imported successfully.'
+    except Exception as error:
+        print >> sys.stdout, '[WARN] Cannot import data, the exception is %s' % error
