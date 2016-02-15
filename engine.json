@@ -26,7 +26,7 @@
             "params": {
                 "appName": "flickthru_urec",
                 "indexName": "urindex",
-                "typeName": "images",
+                "typeName": "items",
                 "comment": "must have data for the first event or the model will not build, other events are optional",
                 "eventNames": ["like", "dislike"]
             }

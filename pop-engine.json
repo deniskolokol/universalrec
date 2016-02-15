@@ -24,7 +24,7 @@
             "params": {
                 "appName": "flickthru_urec",
                 "indexName": "urindex",
-                "typeName": "images",
+                "typeName": "items",
                 "eventNames": ["like", "dislike"],
                 "comment": "this will overwrite any existing popularity model, default is *popular* so add this to engine.json if you want *hot* to be always refreshed during train",
                 "recsModel": "backfill",

@@ -114,7 +114,7 @@ def main(datafile, eventfile, **kwargs):
         handler.delete_events()
     events = []
     props = []
-    entity_type = 'image'
+    entity_type = 'item'
 
     # import static data
     for record in get_json_data(datafile):
@@ -122,20 +122,20 @@ def main(datafile, eventfile, **kwargs):
         properties = record['fields']
         del properties['likes']
         del properties['dislikes']
+        properties = dict((k, v) for k, v in properties.items() if v is not None)
         handler.create_event(event='$set',
                              entity_type=entity_type,
                              entity_id=entity_id,
                              properties=properties,
                              **kwargs)
         for key, val in properties.items():
-            if val is not None:
-                props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
+            props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
     for record in get_json_data(eventfile):
         event = 'like' if record['fields']['liked'] else 'dislike'
         entity_id = record['fields']['user']
-        target_entity_id = record['fields'][entity_type]
+        target_entity_id = record['fields']['image']
         handler.create_event(event=event,
                              entity_type='user',
                              entity_id=entity_id,
@@ -186,11 +186,6 @@ if __name__ == '__main__':
     eventfile = os.path.abspath(opts.event_file)
     print >> sys.stdout, '[INFO] Importing properties from %s, \n\tevents from %s.' % \
                          (datafile, eventfile)
-    # try:
-    #     main(datafile, eventfile, **vars(opts))
-    #     print >> sys.stdout, '[INFO] Data imported successfully.'
-    # except Exception as error:
-    #     print >> sys.stdout, '[WARN] Cannot import data, the exception is %s' % error
 
     main(datafile, eventfile, **vars(opts))
     print >> sys.stdout, '[INFO] Data imported successfully.'
