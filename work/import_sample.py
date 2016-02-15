@@ -2,9 +2,9 @@ import os
 import sys
 import json
 import zipfile
-import dateutil
 import subprocess
 import predictionio
+from dateutil import parser
 from datetime import datetime
 from optparse import OptionParser
 
@@ -35,7 +35,7 @@ def ensure_event_time(event_time):
     if event_time is None:
         return datetime.now(TZ)
     try:
-        event_time = dateutil.parser.parse(event_time)
+        event_time = parser.parse(event_time)
     except ValueError:
         return datetime.now(TZ)
     if event_time.tzinfo is None:
@@ -160,26 +160,26 @@ def main(datafile, eventfile, **kwargs):
 
 
 if __name__ == '__main__':
-    parser = OptionParser(usage="usage: python %prog [OPTIONS]")
-    parser.add_option("-s", "--server", action="store", dest="event_server_uri",
-                      help="URI of event server")
-    parser.add_option("-c", "--access_key", action="store", dest="access_key",
-                      help="Access key")
-    parser.add_option("-l", "--clean", action="store_true", dest="clean",
-                      help="Clean before export")
-    parser.add_option("-d", "--data", action="store", dest="data_file",
-                      help="Data file with image descriptions")
-    parser.add_option("-e", "--events", action="store", dest="event_file",
-                      help="File with events 'like/dislike'")
-    opts, args = parser.parse_args()
+    optparser = OptionParser(usage="usage: python %prog [OPTIONS]")
+    optparser.add_option("-s", "--server", action="store", dest="event_server_uri",
+                         help="URI of event server")
+    optparser.add_option("-c", "--access_key", action="store", dest="access_key",
+                         help="Access key")
+    optparser.add_option("-l", "--clean", action="store_true", dest="clean",
+                         help="Clean before export")
+    optparser.add_option("-d", "--data", action="store", dest="data_file",
+                         help="Data file with image descriptions")
+    optparser.add_option("-e", "--events", action="store", dest="event_file",
+                         help="File with events 'like/dislike'")
+    opts, args = optparser.parse_args()
     if not opts.event_server_uri:
-        parser.error("URI of event server missing")
+        optparser.error("URI of event server missing")
     if not opts.access_key:
-        parser.error("Access key missinng")
+        optparser.error("Access key missinng")
     if not opts.data_file:
-        parser.error("Data file with image descriptions missing")
+        optparser.error("Data file with image descriptions missing")
     if not opts.event_file:
-        parser.error("File with events 'like/dislike' missinng")
+        optparser.error("File with events 'like/dislike' missinng")
 
     datafile = os.path.abspath(opts.data_file)
     eventfile = os.path.abspath(opts.event_file)
