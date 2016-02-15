@@ -2,9 +2,9 @@ import os
 import sys
 import json
 import zipfile
+import dateutil
 import subprocess
 import predictionio
-from dateutil import parser
 from datetime import datetime
 from optparse import OptionParser
 
@@ -35,7 +35,7 @@ def ensure_event_time(event_time):
     if event_time is None:
         return datetime.now(TZ)
     try:
-        event_time = parser.parse(event_time)
+        event_time = dateutil.parser.parse(event_time)
     except ValueError:
         return datetime.now(TZ)
     if event_time.tzinfo is None:
