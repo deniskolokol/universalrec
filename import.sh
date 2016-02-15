@@ -52,7 +52,7 @@ SRV='http://localhost:7070'
 ACCESS_KEY=`pio app show flickthru_urec | grep Key | cut -f 7 -d ' '`
 echo -n "Access key: "
 echo $ACCESS_KEY
-python work/import_sample.py --access_key $ACCESS_KEY --server $SRV --data data/images.zip --events=likes.zip
+python work/import_sample.py --access_key $ACCESS_KEY --server $SRV --data data/images.zip --events data/likes.zip
 
 echo ""
 echo "Building and delpoying model"
