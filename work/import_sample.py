@@ -185,8 +185,11 @@ if __name__ == '__main__':
     eventfile = os.path.abspath(opts.event_file)
     print >> sys.stdout, '[INFO] Importing properties from %s, \n\tevents from %s.' % \
                          (datafile, eventfile)
-    try:
-        main(datafile, eventfile, **vars(opts))
-        print >> sys.stdout, '[INFO] Data imported successfully.'
-    except Exception as error:
-        print >> sys.stdout, '[WARN] Cannot import data, the exception is %s' % error
+    # try:
+    #     main(datafile, eventfile, **vars(opts))
+    #     print >> sys.stdout, '[INFO] Data imported successfully.'
+    # except Exception as error:
+    #     print >> sys.stdout, '[WARN] Cannot import data, the exception is %s' % error
+
+    main(datafile, eventfile, **vars(opts))
+    print >> sys.stdout, '[INFO] Data imported successfully.'
