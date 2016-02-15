@@ -112,7 +112,7 @@ class EventHandler(object):
                      os.path.abspath(handler.filename)
 
 
-def main(filename, **kwargs):
+def main(datafile, eventfile, **kwargs):
     handler = EventHandler(kwargs['access_key'],
                            kwargs['event_server_uri'])
     clean = kwargs.get('clean', False)
@@ -123,7 +123,7 @@ def main(filename, **kwargs):
     entity_type = 'image'
 
     # import static data
-    for record in get_json_data(kwargs['data_file']):
+    for record in get_json_data(datafile):
         entity_id = record['pk']
         properties = record['fields']
         del properties['likes']
@@ -137,9 +137,9 @@ def main(filename, **kwargs):
             props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
-    for record in get_json_data(kwargs['event_file']):
-        entity_id = record['fields']['user']
+    for record in get_json_data(eventfile):
         event = 'like' if record['liked'] else 'dislike'
+        entity_id = record['fields']['user']
         target_entity_id = record['fields'][entity_type]
         handler.create_event(event=event,
                              entity_type='user',
@@ -147,14 +147,14 @@ def main(filename, **kwargs):
                              properties={},
                              target_entity_id=target_entity_id,
                              target_entity_type=entity_type,
-                             event_time=created_at,
+                             event_time=record['fields']['created_at'],
                              **kwargs)
         events.append([entity_id, event, target_entity_id])
 
     handler.close()
 
     # export props and events to text file
-    f = open(kwargs['data_file'].rsplit('.', 1)[0] + '.txt', 'w+')
+    f = open(datafile.rsplit('.', 1)[0] + '.txt', 'w+')
     for line in (events + props):
         f.write(','.join(line) + '\n')
     f.close()
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         parser.error("File with events 'like/dislike' missinng")
 
     try:
-        main(**vars(opts))
+        main(opts.data_file, opts.event_file, **vars(opts))
         print 'Done.'
     except IOError as error:
         print >> sys.stderr, error
