@@ -155,8 +155,8 @@ def main(datafile, eventfile, **kwargs):
         for line in (events + props):
             f.write(','.join(line) + '\n')
         f.close()
-    except Exception:
-        
+    except Exception as error:
+        print >> sys.stdout, '[WARN] Cannot export to text file, the exception is %s' % error
 
 
 if __name__ == '__main__':
