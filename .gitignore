@@ -88,8 +88,10 @@ project/plugins/project/
 
 #PredictionIO specific
 manifest.json
-target/
 pio.log
 /pio.sbt
+data/*.txt
+user-engine.json
 
-local_settings.py
+# Local settings
+local.py

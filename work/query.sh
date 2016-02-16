@@ -3,26 +3,26 @@
 echo ""
 echo "============ simple user recs ============"
 echo ""
-echo "Recommendations for user: usr1"
+echo "Recommendations for user id 1"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "user": "usr1"
+    "user": "1"
 }' http://localhost:8000/queries.json
 echo ""
 
 
 echo ""
-echo "Recommendations for user: usr9"
+echo "Recommendations for user id 10"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "user": "usr9"
+    "user": "10"
 }' http://localhost:8000/queries.json
 echo ""
 
 echo ""
-echo "Recommendations for usr9 with negative bias"
+echo "Recommendations for user id 10 with negative bias"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
@@ -39,7 +39,7 @@ echo "Recommendations for item"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "item": "Base London Lancelot Leather Boots (6087778)"
+    "item": "481"
 }' http://localhost:8000/queries.json
 echo ""
 
