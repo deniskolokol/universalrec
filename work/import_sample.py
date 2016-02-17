@@ -118,17 +118,18 @@ def main(datafile, eventfile, **kwargs):
 
     # import static data
     for record in get_json_data(datafile):
-        entity_id = record['pk']
         properties = record['fields']
-        del properties['likes']
-        del properties['dislikes']
-        properties = dict((k, v) for k, v in properties.items() if v is not None)
-        handler.create_event(event='$set',
-                             entity_type=entity_type,
-                             entity_id=entity_id,
-                             properties=properties,
-                             **kwargs)
+        entity_id = properties.pop('media_standard_resolution_url')
+        properties = dict((k, v) for k, v in properties.items()
+                          if v is not None
+                          and v not in ['media_like_count', 'likes', 'dislikes',
+                                        'subscription_object'])
         for key, val in properties.items():
+            handler.create_event(event='$set',
+                                 entity_type=entity_type,
+                                 entity_id=entity_id,
+                                 properties={key: val},
+                                 **kwargs)
             props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
