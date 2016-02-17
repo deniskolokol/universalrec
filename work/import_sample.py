@@ -124,12 +124,12 @@ def main(datafile, eventfile, **kwargs):
                           if v is not None
                           and v not in ['media_like_count', 'likes', 'dislikes',
                                         'subscription_object'])
+        handler.create_event(event='$set',
+                             entity_type=entity_type,
+                             entity_id=entity_id,
+                             properties=properties,
+                             **kwargs)
         for key, val in properties.items():
-            handler.create_event(event='$set',
-                                 entity_type=entity_type,
-                                 entity_id=entity_id,
-                                 properties={key: val},
-                                 **kwargs)
             props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
