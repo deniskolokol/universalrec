@@ -114,43 +114,39 @@ def main(datafile, eventfile, **kwargs):
         handler.delete_events()
     events = []
     props = []
-    entity_type = 'item'
 
     # import static data
     for record in get_json_data(datafile):
-        properties = record['fields']
-        entity_id = properties.pop('media_standard_resolution_url')
-        properties = dict((k, v) for k, v in properties.items()
+        entity_id = str(record['pk'])
+        properties = dict((k, v) for k, v in record['fields'].items()
                           if v is not None
                           and v not in ['media_like_count', 'likes', 'dislikes',
                                         'subscription_object'])
         handler.create_event(event='$set',
-                             entity_type=entity_type,
+                             entity_type='item',
                              entity_id=entity_id,
-                             properties=properties,
-                             **kwargs)
+                             properties=properties)
         for key, val in properties.items():
-            props.append([str(entity_id), '$set', "%s:%s" % (key, val)])
+            props.append([entity_id, '$set', "%s:%s" % (key, val)])
 
     # import events like/dislike
     for record in get_json_data(eventfile):
-        event = 'like' if record['fields']['liked'] else 'dislike'
-        entity_id = record['fields']['user']
-        target_entity_id = record['fields']['image']
+        fields = record['fields']
+        event = 'like' if fields['liked'] else 'dislike'
+        entity_id = str(fields['user'])
+        target_entity_id = str(fields['image'])
         handler.create_event(event=event,
                              entity_type='user',
                              entity_id=entity_id,
                              properties={},
                              target_entity_id=target_entity_id,
-                             target_entity_type=entity_type,
-                             event_time=record['fields']['created_at'],
-                             **kwargs)
-        events.append([str(entity_id), event, str(target_entity_id)])
+                             target_entity_type='item',
+                             event_time=fields['created_at'])
+        events.append([entity_id, event, target_entity_id])
 
     handler.close()
 
     # export props and events to text file
-    text_filename = datafile.rsplit('.', 1)[0] + '.txt'
     print '[INFO] Exporting props and events to text file.'
     try:
         f = open(datafile.rsplit('.', 1)[0] + '.txt', 'w+')
