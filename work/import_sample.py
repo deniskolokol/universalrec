@@ -120,7 +120,7 @@ def main(datafile, eventfile, **kwargs):
         entity_id = str(record['pk'])
         properties = dict((k, v) for k, v in record['fields'].items()
                           if v is not None
-                          and v not in ['media_like_count', 'likes', 'dislikes',
+                          and k not in ['media_like_count', 'likes', 'dislikes',
                                         'subscription_object'])
         handler.create_event(event='$set',
                              entity_type='item',
