@@ -59,6 +59,13 @@ class EventHandler(object):
     def _do_create_event(self, func, event, entity_type, entity_id,
                          target_entity_type, target_entity_id,
                          properties, event_time):
+        if properties is None:
+            return func(event=event,
+                        entity_type=entity_type,
+                        entity_id=entity_id,
+                        target_entity_type=target_entity_type,
+                        target_entity_id=target_entity_id,
+                        event_time=event_time)
         return func(event=event,
                     entity_type=entity_type,
                     entity_id=entity_id,
@@ -128,9 +135,6 @@ def main(datafile, eventfile, **kwargs):
                              target_entity_id=target_entity_id,
                              target_entity_type='item',
                              event_time=fields['created_at'])
-        handler.create_event(event='$set',
-                             entity_type='user',
-                             entity_id=entity_id)
         events.append([entity_id, event, target_entity_id])
 
     # import static data
