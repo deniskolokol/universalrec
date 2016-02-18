@@ -7,7 +7,7 @@ echo "Recommendations for user id 1"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "user": "user.1"
+    "user": "1"
 }' http://localhost:8000/queries.json
 echo ""
 
@@ -17,7 +17,7 @@ echo "Recommendations for user id 10"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "user": "user.10"
+    "user": "10"
 }' http://localhost:8000/queries.json
 echo ""
 
@@ -26,7 +26,7 @@ echo "Recommendations for user id 10 with negative bias"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "user": "user.9",
+    "user": "9",
     "event": "dislike",
     "bias": -1
 }' http://localhost:8000/queries.json
