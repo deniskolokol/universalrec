@@ -59,13 +59,6 @@ class EventHandler(object):
     def _do_create_event(self, func, event, entity_type, entity_id,
                          target_entity_type, target_entity_id,
                          properties, event_time):
-        if properties is None:
-            return func(event=event,
-                        entity_type=entity_type,
-                        entity_id=entity_id,
-                        target_entity_type=target_entity_type,
-                        target_entity_id=target_entity_id,
-                        event_time=event_time)
         return func(event=event,
                     entity_type=entity_type,
                     entity_id=entity_id,
@@ -131,7 +124,6 @@ def main(datafile, eventfile, **kwargs):
         handler.create_event(event=event,
                              entity_type='user',
                              entity_id=entity_id,
-                             properties={},
                              target_entity_id=target_entity_id,
                              target_entity_type='item',
                              event_time=fields['created_at'])
@@ -140,7 +132,7 @@ def main(datafile, eventfile, **kwargs):
     # import static data
     for record in get_json_data(datafile):
         entity_id = str(record['pk'])
-        properties = dict((k, v) for k, v in record['fields'].items()
+        properties = dict((k, [str(v)]) for k, v in record['fields'].items()
                           if v is not None
                           and k not in ['media_like_count', 'likes', 'dislikes',
                                         'subscription_object'])
