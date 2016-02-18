@@ -128,6 +128,9 @@ def main(datafile, eventfile, **kwargs):
                              target_entity_id=target_entity_id,
                              target_entity_type='item',
                              event_time=fields['created_at'])
+        handler.create_event(event='$set',
+                             entity_type='user',
+                             entity_id=entity_id)
         events.append([entity_id, event, target_entity_id])
 
     # import static data
