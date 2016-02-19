@@ -118,7 +118,7 @@ def main(datafile, eventfile, **kwargs):
     # import events like/dislike
     for record in get_json_data(eventfile):
         fields = record['fields']
-        event = 'plus' if fields['liked'] else 'minus'
+        event = 'like' if fields['liked'] else 'dislike'
         entity_id = str(fields['user'])
         target_entity_id = str(fields['image'])
         handler.create_event(event=event,

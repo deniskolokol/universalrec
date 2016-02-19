@@ -7,7 +7,7 @@
         "params" : {
             "name": "images.txt",
             "appName": "flickthru_urec",
-            "eventNames": ["plus", "minus"]
+            "eventNames": ["like", "dislike"]
         }
     },
     "sparkConf": {
@@ -28,7 +28,7 @@
                 "indexName": "urindex",
                 "typeName": "items",
                 "comment": "must have data for the first event or the model will not build, other events are optional",
-                "eventNames": ["plus", "minus"]
+                "eventNames": ["like", "dislike"]
             }
         }
     ]
