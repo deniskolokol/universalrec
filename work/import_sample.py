@@ -149,7 +149,7 @@ def main(datafile, eventfile, **kwargs):
     print '[INFO] Exporting props and events to text file.'
     try:
         f = open(datafile.rsplit('.', 1)[0] + '.txt', 'w+')
-        for line in (events + props):
+        for line in (props + events):
             f.write(','.join(line) + '\n')
         f.close()
     except Exception as error:
