@@ -115,20 +115,6 @@ def main(datafile, eventfile, **kwargs):
     events = []
     props = []
 
-    # import static data
-    for record in get_json_data(datafile):
-        entity_id = str(record['pk'])
-        properties = dict((k, [str(v)]) for k, v in record['fields'].items()
-                          if v is not None
-                          and k not in ['media_like_count', 'likes', 'dislikes',
-                                        'subscription_object'])
-        handler.create_event(event='$set',
-                             entity_type='item',
-                             entity_id=entity_id,
-                             properties=properties)
-        for key, val in properties.items():
-            props.append([entity_id, '$set', "%s:%s" % (key, val)])
-
     # import events like/dislike
     for record in get_json_data(eventfile):
         fields = record['fields']
@@ -143,13 +129,27 @@ def main(datafile, eventfile, **kwargs):
                              event_time=fields['created_at'])
         events.append([entity_id, event, target_entity_id])
 
+    # import static data
+    for record in get_json_data(datafile):
+        entity_id = str(record['pk'])
+        properties = dict((k, [str(v)]) for k, v in record['fields'].items()
+                          if v is not None
+                          and k not in ['media_like_count', 'likes', 'dislikes',
+                                        'subscription_object'])
+        handler.create_event(event='$set',
+                             entity_type='item',
+                             entity_id=entity_id,
+                             properties=properties)
+        for key, val in properties.items():
+            props.append([entity_id, '$set', "%s:%s" % (key, val)])
+
     handler.close()
 
     # export props and events to text file
     print '[INFO] Exporting props and events to text file.'
     try:
         f = open(datafile.rsplit('.', 1)[0] + '.txt', 'w+')
-        for line in (props + events):
+        for line in (events + props):
             f.write(','.join(line) + '\n')
         f.close()
     except Exception as error:
