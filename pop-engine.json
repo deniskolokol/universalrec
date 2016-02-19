@@ -6,7 +6,7 @@
         "params" : {
             "name": "images.txt",
             "appName": "flickthru_urec",
-            "eventNames": ["like", "dislike"]
+            "eventNames": ["plus", "minus"]
         }
     },
     "sparkConf": {
@@ -25,7 +25,7 @@
                 "appName": "flickthru_urec",
                 "indexName": "urindex",
                 "typeName": "items",
-                "eventNames": ["like", "dislike"],
+                "eventNames": ["plus", "minus"],
                 "comment": "this will overwrite any existing popularity model, default is *popular* so add this to engine.json if you want *hot* to be always refreshed during train",
                 "recsModel": "backfill",
                 "backfillField": {
