@@ -115,20 +115,6 @@ def main(datafile, eventfile, **kwargs):
     events = []
     props = []
 
-    # import events like/dislike
-    for record in get_json_data(eventfile):
-        fields = record['fields']
-        event = 'like' if fields['liked'] else 'dislike'
-        entity_id = str(fields['user'])
-        target_entity_id = str(fields['image'])
-        handler.create_event(event=event,
-                             entity_type='user',
-                             entity_id=entity_id,
-                             target_entity_id=target_entity_id,
-                             target_entity_type='item',
-                             event_time=fields['created_at'])
-        events.append([entity_id, event, target_entity_id])
-
     # import static data
     for record in get_json_data(datafile):
         entity_id = str(record['pk'])
@@ -142,6 +128,20 @@ def main(datafile, eventfile, **kwargs):
                              properties=properties)
         for key, val in properties.items():
             props.append([entity_id, '$set', "%s:%s" % (key, val)])
+
+    # import events like/dislike
+    for record in get_json_data(eventfile):
+        fields = record['fields']
+        event = 'like' if fields['liked'] else 'dislike'
+        entity_id = str(fields['user'])
+        target_entity_id = str(fields['image'])
+        handler.create_event(event=event,
+                             entity_type='user',
+                             entity_id=entity_id,
+                             target_entity_id=target_entity_id,
+                             target_entity_type='item',
+                             event_time=fields['created_at'])
+        events.append([entity_id, event, target_entity_id])
 
     handler.close()
 
