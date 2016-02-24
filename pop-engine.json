@@ -4,7 +4,7 @@
     "engineFactory": "com.flickthru.RecommendationEngine",
     "datasource": {
         "params" : {
-            "name": "images.txt",
+            "name": "sample.txt",
             "appName": "flickthru_urec",
             "eventNames": ["like", "dislike"]
         }
