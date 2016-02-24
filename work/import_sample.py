@@ -215,8 +215,8 @@ def main(datafile, eventfile, **kwargs):
             event = event_records[str(ln)]
             event['target_entity_id'] = item_id
             handler.create_event(**event)
-            events.append([event['entity_id'], event['event'],
-                           event['target_entity_id']])
+            events.append([str(event['entity_id']), event['event'],
+                           str(event['target_entity_id'])])
         except KeyError:
             pass
         ln += 1
