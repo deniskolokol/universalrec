@@ -201,9 +201,7 @@ def main(datafile, eventfile, **kwargs):
                 )
             continue
         # create $set event
-        iid = properties.pop('iid')
-        item_descr = properties.pop('description')
-        item_id = "[%s]%s" % (iid, item_descr)
+        item_id = properties.pop('iid')
         handler.create_event(event='$set',
                              entity_type='item',
                              entity_id=item_id,
