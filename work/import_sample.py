@@ -209,7 +209,7 @@ def main(datafile, eventfile, **kwargs):
                              **kwargs)
         # prepare item properties for export
         for key, val in properties.items():
-            props.append([item_id, '$set', "%s:%s" % (key, val)])
+            props.append([str(item_id), '$set', "%s:%s" % (key, val)])
         # check if this item was liked or disliked
         try:
             event = event_records[str(ln)]
