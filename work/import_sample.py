@@ -193,8 +193,9 @@ class Registrator():
         """
         item_id = str(event.pop('entity_id'))
         ev = event.pop('event')
-        for key, val in event.items():
-            self.set_event.append([item_id, ev, "%s:%s" % (key, val)])
+        key = event.keys()[0]
+        val = ':'.join([str(v) for v in event[key]])
+        self.set_event.append([item_id, ev, "%s:%s" % (key, val)])
 
     def _register_event(self, event):
         data = (
@@ -265,17 +266,28 @@ def main(datafile, eventfile, **kwargs):
             continue
         # create $set event
         item_id = properties.pop('iid')
-        if not dry_run:
-            prop = dict((k, [v]) for k, v in properties.items())
-            del prop['cid']
-            handler.create_event(event='$set',
-                                 entity_type='item',
-                                 entity_id=item_id,
-                                 properties=prop,
-                                 **kwargs)
-        # prepare item properties for export
-        properties.update({'event': '$set', 'entity_id': item_id})
-        regi.register(properties)
+        prop = dict((k, [v]) for k, v in properties.items())
+        prop = {
+            'categories': [
+                properties['category'],
+                properties['brand'],
+                properties['color'],
+                properties['gender'],
+                properties['description'],
+            ],
+            'image': [properties['image']],
+            'price': [properties['price']]
+        }
+        for k, v in prop.items():
+            if not dry_run:
+                handler.create_event(event='$set',
+                                     entity_type='item',
+                                     entity_id=item_id,
+                                     properties=prop,
+                                     **kwargs)
+            # prepare item properties for export
+            reg_prop = {'event': '$set', 'entity_id': item_id, k: v}
+            regi.register(reg_prop)
         ln += 1
         # check if this item was liked or disliked
         try:
