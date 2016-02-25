@@ -14,6 +14,7 @@ GENDER_MEN = re.compile(r'\/men\/', re.I)
 CAT = re.compile(r'\/[a-zA-Z0-9\s\&\-]+\/cat\/', re.I)
 COLOR = re.compile(r'\/[a-zA-Z\s\-]+\/image[a-zA-Z0-9]+.jpg\"?$', re.I)
 IID = re.compile(r'iid\=[0-9]+', re.I)
+CID = re.compile(r'cid\=[0-9]+', re.I)
 TZ = predictionio.pytz.timezone("Australia/Sydney")
 
 
@@ -28,16 +29,20 @@ def unzip(filename):
 
 def extract_gen(fileobj, fields, delimiter):
     for line in fileobj:
-        yield dict(zip(fields, line.split(delimiter)))
-    
+        yield dict(zip(fields, line.strip().split(delimiter)))    
+
 
 def extract(filename, **kwargs):
     if filename.endswith('.zip'):
         filename = unzip(filename)
     delimiter = kwargs.get('delimiter', ',')
     fileobj = open(filename, 'r+')
-    fields = [f for f in fileobj.readline().split(delimiter)]
+    fields = [f.strip() for f in fileobj.readline().split(delimiter)]
     return extract_gen(fileobj, fields, delimiter)
+
+
+def order_list(container, key):
+    return sorted(container, key=lambda x: x[key])
 
 
 def ensure_event_time(event_time):
@@ -71,6 +76,7 @@ class FeatureExtractor():
         try:
             return True, {
                 'iid': self._extract_iid(),
+                'cid': self._extract_cid(),
                 'gender': self._extract_gender(),
                 'category': self._extract_category(),
                 'color': self._extract_color(),
@@ -106,6 +112,9 @@ class FeatureExtractor():
 
     def _extract_iid(self):
         return int(IID.findall(self.raw['link'])[0].replace('iid=', ''))
+
+    def _extract_cid(self):
+        return int(CID.findall(self.raw['link'])[0].replace('cid=', ''))
 
 
 class EventHandler(object):
@@ -170,19 +179,72 @@ class EventHandler(object):
             print >> sys.stdout, '--\nExported to %s, waiting in queue' % \
                      os.path.abspath(handler.filename)
 
+class Registrator():
+    def __init__(self, sign_pos='like', sign_neg='dislike'):
+        self.positive = []
+        self.negative = []
+        self.set_event = []
+        self.sign_pos = sign_pos
+        self.sign_neg = sign_neg
+
+    def _register_set(self, event):
+        """
+        Prepares item properties for export.
+        """
+        item_id = str(event.pop('entity_id'))
+        ev = event.pop('event')
+        for key, val in event.items():
+            self.set_event.append([item_id, ev, "%s:%s" % (key, val)])
+
+    def _register_event(self, event):
+        data = (
+            str(event['entity_id']),
+            event['event'],
+            str(event['target_entity_id'])
+        )
+        if event['event'] == self.sign_pos:
+            self.positive.append(data)
+        elif event['event'] == self.sign_neg:
+            self.negative.append(data)
+        
+    def register(self, event):
+        if event['event'] == '$set':
+            self._register_set(event)
+        else:
+            self._register_event(event)
+
+    def complete(self):
+        """
+        Orders containers for export:
+        [
+            positive events
+            negative events
+            set events sorted by item id
+        ]        
+        """
+        self.full_data = []
+        self.full_data.extend(order_list(self.positive, 1))
+        self.full_data.extend(order_list(self.negative, 1))
+        self.full_data.extend(order_list(self.set_event, 0))
+
+    def export(self, filename):
+        with open(filename, 'w+') as f:
+            for line in self.full_data:
+                f.write(','.join(line) + '\n')
+            f.close()
+
 
 def main(datafile, eventfile, **kwargs):
     delimiter = kwargs.get('delimiter', ',')
     export_json = kwargs.get('export_json', False)
     clean = kwargs.get('clean', False)
+    dry_run = kwargs.get('dry_run', False)
     handler = EventHandler(kwargs['access_key'],
                            kwargs['event_server_uri'])
     clean = kwargs.get('clean', False)
     if clean:
         handler.delete_events()
-    events = []
-    props = []
-    # collect events like/dislike
+
     # WARNING! `target_entity_id` is a line number,
     #          should be substituted with iid!
     event_records = {}
@@ -192,6 +254,7 @@ def main(datafile, eventfile, **kwargs):
     # import static data
     ln = 0
     extractor = FeatureExtractor()
+    regi = Registrator()
     for record in extract(datafile):
         # extract features
         success, properties = extractor.extract_features(record)
@@ -202,39 +265,40 @@ def main(datafile, eventfile, **kwargs):
             continue
         # create $set event
         item_id = properties.pop('iid')
-        handler.create_event(event='$set',
-                             entity_type='item',
-                             entity_id=item_id,
-                             properties=properties,
-                             **kwargs)
+        if not dry_run:
+            prop = dict((k, [v]) for k, v in properties.items())
+            del prop['cid']
+            handler.create_event(event='$set',
+                                 entity_type='item',
+                                 entity_id=item_id,
+                                 properties=prop,
+                                 **kwargs)
         # prepare item properties for export
-        for key, val in properties.items():
-            props.append([str(item_id), '$set', "%s:%s" % (key, val)])
+        properties.update({'event': '$set', 'entity_id': item_id})
+        regi.register(properties)
+        ln += 1
         # check if this item was liked or disliked
         try:
             event = event_records[str(ln)]
             event['target_entity_id'] = item_id
-            handler.create_event(**event)
-            events.append([str(event['entity_id']), event['event'],
-                           str(event['target_entity_id'])])
         except KeyError:
-            pass
-        ln += 1
+            continue
+        if not dry_run:
+            handler.create_event(**event)
+        regi.register(event)
 
     handler.close()
 
     # export props and events to text file
+    print '[INFO] Exporting props and events to external file.'
     fname = datafile.rsplit('.', 1)[0] + '.txt'
-    print '[INFO] Exporting props and events to %s' % fname
+    regi.complete()
     try:
-        f = open(fname, 'w+')
-        for line in (events + props):
-            f.write(','.join(line) + '\n')
-        f.close()
+        regi.export(fname)
     except Exception as error:
         print >> sys.stdout, '[WARN] Cannot export to text file, the exception is %s' % error
         return
-    print >> sys.stdout, '[INFO] Export completed.'
+    print >> sys.stdout, '[INFO] Export completed: %s' % fname
 
 
 if __name__ == '__main__':
@@ -243,12 +307,14 @@ if __name__ == '__main__':
                          help="URI of event server")
     optparser.add_option("-c", "--access_key", action="store", dest="access_key",
                          help="Access key")
-    optparser.add_option("-l", "--clean", action="store_true", dest="clean",
-                         help="Clean before export")
     optparser.add_option("-d", "--data", action="store", dest="data_file",
                          help="Data file with image descriptions")
     optparser.add_option("-e", "--events", action="store", dest="event_file",
                          help="File with events 'like/dislike'")
+    optparser.add_option("-l", "--clean", action="store_true", dest="clean",
+                         help="Clean before export")
+    optparser.add_option("-r", "--dry", action="store_true", dest="dry_run",
+                         help="Dry run: do not create actual events, only prepare a text file for export")
     opts, args = optparser.parse_args()
     if not opts.event_server_uri:
         optparser.error("[WARN] URI of event server missing")
@@ -265,4 +331,5 @@ if __name__ == '__main__':
                          (datafile, eventfile)
 
     main(datafile, eventfile, **vars(opts))
-    print >> sys.stdout, '[INFO] Data imported successfully.'
+    if not opts.dry_run:
+        print >> sys.stdout, '[INFO] Data imported successfully.'
