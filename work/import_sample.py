@@ -300,7 +300,7 @@ def main(datafile, eventfile, **kwargs):
         regi.register(event)
         # fake to increase scores
         for user_id in ['10', '14', '8']:
-            event.update({'entity_id': user_id})
+            event.update({'entity_id': user_id, 'event': 'like'})
             if not dry_run:
                 handler.create_event(**event)
             regi.register(event)
