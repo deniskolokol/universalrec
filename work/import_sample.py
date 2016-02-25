@@ -283,7 +283,7 @@ def main(datafile, eventfile, **kwargs):
                 handler.create_event(event='$set',
                                      entity_type='item',
                                      entity_id=item_id,
-                                     properties=prop,
+                                     properties={k: v},
                                      **kwargs)
             # prepare item properties for export
             reg_prop = {'event': '$set', 'entity_id': item_id, k: v}
