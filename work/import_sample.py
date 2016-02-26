@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+import random
 import zipfile
 import subprocess
 import predictionio
@@ -25,6 +26,31 @@ def unzip(filename):
         z.extractall(dirname)
         z.close()
     return filename.replace('.zip', '.csv')
+
+
+def weighted_choice(choices):
+    """
+    Like random.choice, but each element can have a different chance of
+    being selected.
+
+    choices can be any iterable containing iterables with two items each.
+    Technically, they can have more than two items, the rest will just be
+    ignored.  The first item is the thing being chosen, the second item is
+    its weight.  The weights can be any numeric values, what matters is the
+    relative differences between them.
+    """
+    space = {}
+    current = 0
+    for choice, weight in choices:
+        if weight > 0:
+            space[current] = choice
+            current += weight
+    rand = random.uniform(0, current)
+    for key in sorted(space.keys() + [current]):
+        if rand < key:
+            return choice
+        choice = space[key]
+    return None
 
 
 def extract_gen(fileobj, fields, delimiter):
@@ -299,11 +325,16 @@ def main(datafile, eventfile, **kwargs):
             handler.create_event(**event)
         regi.register(event)
         # fake to increase scores
-        for user_id in ['10', '14', '8']:
-            event.update({'entity_id': user_id, 'event': 'like'})
+        user_ids = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14]
+        random.shuffle(user_ids)
+        idx = random.randint(0, len(user_ids)-1)
+        ev = weighted_choice([('like', 0.8), ('dislike', 0.2)])
+        while idx >= 0:
+            event.update({'entity_id': user_ids[idx], 'event': ev})
             if not dry_run:
                 handler.create_event(**event)
             regi.register(event)
+            idx -= 1
 
 
     handler.close()
