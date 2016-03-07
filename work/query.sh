@@ -39,7 +39,7 @@ echo "Recommendations for item"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "item": "250"
+    "item": "5577899"
 }' http://localhost:8000/queries.json
 echo ""
 
@@ -126,6 +126,6 @@ echo ""
 curl -H "Content-Type: application/json" -d '
 {
     "user": "14",
-    "item": "250"
+    "item": "5577899"
 }' http://localhost:8000/queries.json
 echo ""

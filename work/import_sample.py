@@ -336,7 +336,6 @@ def main(datafile, eventfile, **kwargs):
             regi.register(event)
             idx -= 1
 
-
     handler.close()
 
     # export props and events to text file
