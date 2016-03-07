@@ -21,7 +21,7 @@ if [ -f user-engine.json ]; then
 fi
 
 # if [ ! -f data/integration-test-expected.txt ]; then
-#     echo "File not found: data/integration-test-expected.txt"
+#     echo "File not found: data/import-expected.txt"
 #     exit 1
 # fi
 

@@ -7,7 +7,7 @@ echo "Recommendations for user id 1"
 echo ""
 curl -H "Content-Type: application/json" -d '
 {
-    "user": "1"
+    "user": "10"
 }' http://localhost:8000/queries.json
 echo ""
 
