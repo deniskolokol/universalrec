@@ -20,11 +20,6 @@ if [ -f user-engine.json ]; then
     exit 1
 fi
 
-# if [ ! -f data/integration-test-expected.txt ]; then
-#     echo "File not found: data/import-expected.txt"
-#     exit 1
-# fi
-
 echo ""
 echo "Checking status, should exit if pio is not running."
 pio status
@@ -70,11 +65,6 @@ work/query.sh > test.out
 echo ""
 echo "Restoring engine.json"
 mv user-engine.json engine.json
-
-# XXX: manually create data for user's like/dislike and integration-test-expected.txt
-# echo ""
-# echo "Differences between expected and actual results, none is a passing test:"
-# diff data/integration-test-expected.txt test.out
 
 echo ""
 echo "Note that the engine is still deployed until killed or this shell exists."
